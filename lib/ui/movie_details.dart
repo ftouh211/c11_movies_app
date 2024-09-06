@@ -1,99 +1,5 @@
-// import 'package:c11_movie_app/api_maneger.dart';
-// import 'package:flutter/material.dart';
-// import 'package:c11_movie_app/detiels_model.dart'; // Ensure the path is correct
-//
-// class MovieDetails extends StatelessWidget {
-//   final int movieId;
-//
-//   const MovieDetails({super.key, required this.movieId});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       child: Scaffold(
-//         backgroundColor: Color(0xff121312),
-//         appBar: AppBar(
-//           title: Text('Movie Details'),
-//         ),
-//         body: FutureBuilder<MovesDetiels>(
-//           future: ApiManager.getMovieDetails(movieId),
-//           builder: (context, snapshot) {
-//             if (snapshot.connectionState == ConnectionState.waiting) {
-//               return Center(child: CircularProgressIndicator());
-//             }
-//             if (snapshot.hasError) {
-//               return Center(child: Text("Something went wrong: ${snapshot.error}"));
-//             }
-//             if (!snapshot.hasData || snapshot.data == null) {
-//               return Center(child: Text("No details available"));
-//             }
-//
-//             var movie = snapshot.data!;
-//
-//             return SingleChildScrollView(
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Image.network(
-//                     'https://image.tmdb.org/t/p/w500${movie.backdropPath}',
-//                     fit: BoxFit.cover,
-//                     width: double.infinity,
-//                     height: 250,
-//                   ),
-//                   Padding(
-//                     padding: const EdgeInsets.all(8.0),
-//                     child: Text(
-//                       movie.title ?? "No Title",
-//                       style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-//                     ),
-//                   ),
-//                   Padding(
-//                     padding: const EdgeInsets.all(8.0),
-//                     child: Text(
-//                       movie.tagline ?? "",
-//                       style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
-//                     ),
-//                   ),
-//                   Padding(
-//                     padding: const EdgeInsets.all(8.0),
-//                     child: Text(
-//                       'Release Date: ${movie.releaseDate ?? "Unknown"}',
-//                       style: TextStyle(fontSize: 16),
-//                     ),
-//                   ),
-//                   Padding(
-//                     padding: const EdgeInsets.all(8.0),
-//                     child: Text(
-//                       'Rating: ${movie.voteAverage?.toStringAsFixed(1) ?? "N/A"} (${movie.voteCount ?? 0} votes)',
-//                       style: TextStyle(fontSize: 16),
-//                     ),
-//                   ),
-//                   Padding(
-//                     padding: const EdgeInsets.all(8.0),
-//                     child: Text(
-//                       movie.overview ?? "No Overview Available",
-//                       style: TextStyle(fontSize: 16),
-//                       maxLines: 2,
-//                     ),
-//                   ),
-//                   Padding(
-//                     padding: const EdgeInsets.all(8.0),
-//                     child: Text(
-//                       'Genres: ${movie.genres?.map((g) => g.name).join(', ') ?? "Unknown"}',
-//                       style: TextStyle(fontSize: 16),
-//                     ),
-//                   ),
-//                   // You can add more details here based on your model
-//                 ],
-//               ),
-//             );
-//           },
-//         ),
-//       ),
-//     );
-//   }
-// }
 
+import 'package:c11_movie_app/ui/watchlist.dart';
 import 'package:c11_movie_app/utils/api_maneger.dart';
 import 'package:c11_movie_app/models/similer_response.dart';
 import 'package:flutter/material.dart';
@@ -148,10 +54,10 @@ class MovieDetails extends StatelessWidget {
                 }
                 if (snapshot.hasError) {
                   return Center(
-                      child: Text("Something went wrong: ${snapshot.error}"));
+                      child: Text("Something went wrong: ",style: TextStyle(color: Colors.white),));
                 }
                 if (!snapshot.hasData || snapshot.data == null) {
-                  return const Center(child: Text("No details available"));
+                  return const Center(child: Text("No details available",style: TextStyle(color: Colors.white),));
                 }
 
                 var movie = snapshot.data!;
@@ -182,25 +88,97 @@ class MovieDetails extends StatelessWidget {
                       ' ${movie.releaseDate ?? "Unknown"}',
                       style: const TextStyle(fontSize: 16, color: Colors.white),
                     ),
-                    SizedBox(height: 10,),
+                    SizedBox(
+                      height: 10,
+                    ),
                     Column(
                       children: [
                         Stack(
                           children: [
                             Container(
-                              width: 129,
-                              height: 180,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                image: DecorationImage(
-                                  image: NetworkImage(
-                                      'https://image.tmdb.org/t/p/w500${movie.backdropPath}'),
-                                  fit: BoxFit.cover,
-                                ),
+                              padding: EdgeInsets.symmetric(vertical: 10),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: Image.network(
+                                      'https://image.tmdb.org/t/p/w500${movie.backdropPath}',
+                                      width: 130,
+                                      height: 200,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                      width:
+                                          10), // Space between image and text
+
+                                  // Movie Details (Title, Date, Overview)
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          movie.title ?? 'Unknown Title',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        SizedBox(height: 5),
+                                        Text(
+                                          movie.releaseDate?.substring(0, 4) ??
+                                              'Unknown Date',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.white70,
+                                          ),
+                                        ),
+                                        SizedBox(height: 5),
+                                        Text(
+                                          movie.overview ??
+                                              'No description available',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.white60,
+                                          ),
+                                          maxLines:
+                                              3, // Limit to 3 lines of text
+                                          overflow: TextOverflow
+                                              .ellipsis, // Handle overflow
+                                        ),
+                                        SizedBox(
+                                          height: 10,
+                                        ),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.star,
+                                              color: Color(0xffFFBB3B),
+                                              size: 18,
+                                            ),
+                                            SizedBox(
+                                              width: 5,
+                                            ),
+                                            Text(
+                                              '${movie.voteAverage?.toStringAsFixed(1) ?? "N/A"} (${movie.voteCount ?? 0} votes)',
+                                              style: const TextStyle(
+                                                  fontSize: 16,
+                                                  color: Colors.white),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             Positioned(
-                              top: 0,
+                              top: 7,
                               left: 0,
                               child: Container(
                                 width: 40,
@@ -214,13 +192,13 @@ class MovieDetails extends StatelessWidget {
                                     size: 40,
                                   ),
                                   onPressed: () {
-                                    // Navigator.pushNamed(context, MovieDetails.routeName);
+                                    Navigator.pushNamed(context, Watchlist.routeName);
                                   },
                                 ),
                               ),
                             ),
                             Positioned(
-                              top: 0,
+                              top: 7,
                               left: 0,
                               child: Container(
                                 // color: Colors.greenAccent,
@@ -234,50 +212,8 @@ class MovieDetails extends StatelessWidget {
                                     color: Colors.white,
                                   ),
                                   onPressed: () {
-                                    // Navigator.pushNamed(context, MovesDetiels.routeName);
+                                    Navigator.pushNamed(context, Watchlist.routeName);
                                   },
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 140),
-                              child: Container(
-                                // color: Colors.blue,
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      movie.overview ?? "No Overview Available",
-                                      style: const TextStyle(
-                                          fontSize: 16, color: Colors.white),
-                                      maxLines: 2,
-                                    ),
-                                    SizedBox(
-                                      height: 10,
-                                    ),
-                                    Text(
-                                      'Genres: ${movie.genres?.map((g) => g.name).join(', ') ?? "Unknown"}',
-                                      style: const TextStyle(
-                                          fontSize: 16, color: Colors.white),
-                                    ),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.star,
-                                          color: Color(0xffFFBB3B),
-                                          size: 18,
-                                        ),
-                                        SizedBox(
-                                          width: 5,
-                                        ),
-                                        Text(
-                                          '${movie.voteAverage?.toStringAsFixed(1) ?? "N/A"} (${movie.voteCount ?? 0} votes)',
-                                          style: const TextStyle(
-                                              fontSize: 16,
-                                              color: Colors.white),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
                                 ),
                               ),
                             ),
@@ -357,7 +293,7 @@ class MovieDetails extends StatelessWidget {
                                         color: Color(0xff514F4F),
                                       ),
                                       onPressed: () {
-                                        // Navigator.pushNamed(context, MovesDetiels.routeName);
+                                        Navigator.pushNamed(context, Watchlist.routeName);
                                       },
                                     ),
                                   ),
@@ -377,7 +313,7 @@ class MovieDetails extends StatelessWidget {
                                         color: Colors.white,
                                       ),
                                       onPressed: () {
-                                        // Navigator.pushNamed(context, MovesDetiels.routeName);
+                                        Navigator.pushNamed(context, Watchlist.routeName);
                                       },
                                     ),
                                   ),

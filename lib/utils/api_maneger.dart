@@ -1,36 +1,15 @@
-// import 'dart:convert';
-//
-// import 'package:c11_movie_app/populer_response.dart';
-// import 'package:http/http.dart' as http;
-// class ApiManeger{
-//
-//
-//   //https://api.themoviedb.org/3/movie/popular
-//   static Future<PopularResponse> getMovies() async {
-//     Uri url = Uri.https("api.themoviedb.org","/3/movie/popular",
-//     {
-//       "language": "en-US",
-//       "page": "1",
-//       "api_Key" : "dec390bbb092e6703c91249d3bf748df"
-//     });
-//     http.Response response = await http.get(url);
-//
-//
-//     var json = jsonDecode(response.body);
-//
-//     PopularResponse popularResponse = PopularResponse.fromJson(json);
-//     return popularResponse;
-//
-//   }
-// }
 
 import 'dart:convert';
+import 'package:c11_movie_app/models/catigory_model.dart';
+import 'package:c11_movie_app/models/movies_genre.dart';
+import 'package:c11_movie_app/models/search_response.dart';
 import 'package:c11_movie_app/utils/constants.dart';
 import 'package:c11_movie_app/models/detiels_model.dart';
 import 'package:c11_movie_app/models/similer_response.dart';
 import 'package:c11_movie_app/models/populer_response.dart';
 import 'package:c11_movie_app/models/top_response.dart';
 import 'package:c11_movie_app/models/upcoming_resposes.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class ApiManager {
@@ -64,8 +43,97 @@ class ApiManager {
   }
 
 
+  //https://api.themoviedb.org/3/genre/movie/list
+  static Future<CatogiryModel> getCatiogry() async {
+    Uri url = Uri.https(
+        Constants.baseUrl,
+        "/3/genre/movie/list",
+        {
+          "language": "en-US",
+          "page": "1",
+          "api_key": Constants.apiKey // Make sure the API key is correct
+        }
+    );
+
+    try {
+      http.Response response = await http.get(url);
+      print("Status Code: ${response.statusCode}"); // Debug: print status code
+      print("Response Body: ${response.body}"); // Debug: print the response body
+
+      if (response.statusCode == 200) {
+        var json = jsonDecode(response.body);
+        CatogiryModel catogiryModel = CatogiryModel.fromJson(json);
+        return catogiryModel;
+      } else {
+        throw Exception('Failed to load movies. Status Code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print("Error: $e");
+      rethrow;
+    }
+  }
+
+  //https://api.themoviedb.org/3/discover/movie
+  static Future<MoviesGenre> getGenre(int genreId) async {
+    Uri url = Uri.https(
+        Constants.baseUrl,
+        "/3/discover/movie",
+        {
+          "language": "en-US",
+          "page": "1",
+          "api_key": Constants.apiKey // Make sure the API key is correct
+        }
+    );
+
+    try {
+      http.Response response = await http.get(url);
+      print("Status Code: ${response.statusCode}"); // Debug: print status code
+      print("Response Body: ${response.body}"); // Debug: print the response body
+
+      if (response.statusCode == 200) {
+        var json = jsonDecode(response.body);
+        MoviesGenre moviesGenre = MoviesGenre.fromJson(json);
+        return moviesGenre;
+      } else {
+        throw Exception('Failed to load movies. Status Code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print("Error: $e");
+      rethrow;
+    }
+  }
+
+
+
+
+  static Future<SearchResponse> getSearch(String query) async {
+    Uri url = Uri.https(
+        Constants.baseUrl,
+        "/3/search/movie",
+        {
+          "language": "en-US",
+          "page": "1",
+          "api_key": Constants.apiKey,
+          "query": query // Pass the search query
+        }
+    );
+
+    try {
+      http.Response response = await http.get(url);
+      if (response.statusCode == 200) {
+        var json = jsonDecode(response.body);
+        return SearchResponse.fromJson(json); // Parse the response
+      } else {
+        throw Exception('Failed to load movies. Status Code: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   //https://api.themoviedb.org/3/movie/{movie_id}
   static Future<MovesDetiels> getMovieDetails(int id) async {
+
     Uri url = Uri.https(
         Constants.baseUrl,
         "/3/movie/$id",
@@ -158,6 +226,9 @@ class ApiManager {
 
   //https://api.themoviedb.org/3/movie/top_rated
   static Future<TopResponses> getTop() async {
+
+
+
     Uri url = Uri.https(
         Constants.baseUrl ,
         "/3/movie/top_rated",
@@ -186,3 +257,5 @@ class ApiManager {
     }
   }
 }
+
+

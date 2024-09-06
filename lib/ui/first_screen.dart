@@ -1,53 +1,85 @@
+
 import 'package:c11_movie_app/ui/movie_details.dart';
+import 'package:c11_movie_app/ui/watchlist.dart';
 import 'package:c11_movie_app/utils/api_maneger.dart';
-import 'package:c11_movie_app/models/detiels_model.dart';
 import 'package:c11_movie_app/models/populer_response.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FirstScreen extends StatefulWidget {
-
   static const String routeName = "FirstPage";
-   FirstScreen({super.key});
+  FirstScreen({super.key});
 
   @override
   State<FirstScreen> createState() => _FirstScreenState();
 }
 
 class _FirstScreenState extends State<FirstScreen> {
-  static const String routeName = "first";
-  int selectedIndex=0;
+  List<int> watchlist = [];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadWatchlist();
+  }
+
+  Future<void> _loadWatchlist() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      watchlist = (prefs.getStringList('watchlist') ?? [])
+          .map((id) => int.parse(id))
+          .toList();
+    });
+  }
+
+  Future<void> _saveWatchlist() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('watchlist', watchlist.map((id) => id.toString()).toList());
+  }
+
+  Future<void> _toggleWatchlist(int movieId) async {
+
+    final prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      if (watchlist.contains(movieId)) {
+        watchlist.remove(movieId);
+      } else {
+        watchlist.add(movieId);
+      }
+      _saveWatchlist();
+    });
+    List<String> savedWatchlist = watchlist.map((id) => id.toString()).toList();
+    await prefs.setStringList('watchlist', savedWatchlist);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xff121312),
+      backgroundColor: const Color(0xff121312),
       body: Column(
         children: [
           FutureBuilder(
             future: ApiManager.getMovies(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasError) {
-                return Center(
-                    child: Text("Something went wrong: ${snapshot.error}"));
+                return Center(child: Text("Something went wrong: ${snapshot.error}"));
               }
               if (!snapshot.hasData || snapshot.data == null) {
-                return Center(child: Text("No movies available"));
+                return const Center(child: Text("No movies available"));
               }
 
               var movies = snapshot.data!.results ?? [];
 
               return CarouselSlider.builder(
                 itemCount: movies.length,
-                itemBuilder:
-                    (BuildContext context, int index, int realIndex) {
+                itemBuilder: (BuildContext context, int index, int realIndex) {
                   var movie = movies[index];
-                  String posterUrl =
-                      'https://image.tmdb.org/t/p/w500${movie.posterPath}'; // Construct the full poster URL
+                  String posterUrl = 'https://image.tmdb.org/t/p/w500${movie.posterPath}';
 
                   return Stack(
                     children: [
@@ -75,9 +107,8 @@ class _FirstScreenState extends State<FirstScreen> {
                       ),
                       Positioned(
                         top: 85,
-                        left: MediaQuery.of(context).size.width / 2 -
-                            40, // Center icon horizontally
-                        child: Icon(
+                        left: MediaQuery.of(context).size.width / 2 - 40,
+                        child: const Icon(
                           Icons.play_circle_fill,
                           size: 80,
                           color: Colors.white,
@@ -105,42 +136,30 @@ class _FirstScreenState extends State<FirstScreen> {
                               child: Container(
                                 width: 40,
                                 height: 40,
-                                // color: Colors.yellow,
                                 child: IconButton(
                                   padding: EdgeInsets.zero,
-                                  icon: Icon(Icons.bookmark,color: Color(0xff514F4F),size: 40,),
+                                  icon: Icon(
+                                    watchlist.contains(movie.id)
+                                        ? Icons.bookmark
+                                        : Icons.bookmark_border,
+                                    color: const Color(0xffF7B539),
+                                    size: 40,
+                                  ),
                                   onPressed: () {
-                                    // Navigator.pushNamed(context, MovieDetails.routeName);
+                                    _toggleWatchlist(movie.id!); // Toggle watchlist
                                   },
                                 ),
                               ),
-                            ),
-                            Positioned(
-                              top: 0,
-                              left: 0,
-                              child: Container(
-                                // color: Colors.greenAccent,
-                                width: 40,
-                                height:40,
-                                child: IconButton(
-                                  padding: EdgeInsets.zero,
-                                  icon: Icon(Icons.add,size: 22,color: Colors.white,),
-                                  onPressed: () {
-                                    // Navigator.pushNamed(context, MovesDetiels.routeName);
-                                  },
-                                ),
-                              ),
-
                             ),
                           ],
                         ),
                       ),
                       Positioned(
                         bottom: 40,
-                        left: 160, // Center text horizontally
+                        left: 160,
                         child: Text(
                           movie.title ?? "No Title",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -150,10 +169,10 @@ class _FirstScreenState extends State<FirstScreen> {
                       ),
                       Positioned(
                         bottom: 20,
-                        left: 160, // Center text horizontally
+                        left: 160,
                         child: Text(
                           movie.releaseDate?.substring(0, 10) ?? "",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -169,41 +188,41 @@ class _FirstScreenState extends State<FirstScreen> {
                   enlargeCenterPage: true,
                   autoPlay: true,
                   aspectRatio: 2.0,
-                  autoPlayInterval: Duration(seconds: 3),
-                  viewportFraction:
-                  1.0, // Make the carousel take up the whole width
+                  autoPlayInterval: const Duration(seconds: 3),
+                  viewportFraction: 1.0,
                 ),
               );
             },
           ),
+          const SizedBox(height: 10),
           FutureBuilder(
             future: ApiManager.getUpcoming(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasError) {
-                return Center(
-                    child: Text("Something went wrong: ${snapshot.error}"));
+                return Center(child: Text("Something went wrong: ${snapshot.error}"));
               }
               if (!snapshot.hasData || snapshot.data == null) {
-                return Center(child: Text("No movies available"));
+                return const Center(child: Text("No movies available"));
               }
 
               var upcomingMovies = snapshot.data?.results ?? [];
               return Container(
-                color: Color(0xff282A28),
+                color: const Color(0xff282A28),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10,top: 5),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 10, top: 5),
                       child: Text(
                         "New Releases ",
                         style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     Container(
@@ -216,50 +235,38 @@ class _FirstScreenState extends State<FirstScreen> {
                           var movie = upcomingMovies[index];
                           return Padding(
                             padding: const EdgeInsets.all(8),
-                            child: Stack(children: [
-                              Container(
-                                // width: 127,
-                                child: movie.posterPath != null
-                                    ? Image.network(
-                                  'https://image.tmdb.org/t/p/w200${movie.posterPath}',
-                                  fit: BoxFit.cover,
-                                )
-                                    : Icon(Icons.image_not_supported),
-                              ),
-                              Positioned(
-                                top: 0,
-                                left: 0,
-                                child: Container(
-                                  width: 22,
-                                  height: 22,
-                                  // color: Colors.yellow,
-                                  child: IconButton(
-                                    padding: EdgeInsets.zero,
-                                    icon: Icon(Icons.bookmark,color: Color(0xff514F4F),),
-                                    onPressed: () {
-                                      // Navigator.pushNamed(context, MovesDetiels.routeName);
-                                    },
+                            child: Stack(
+                              children: [
+                                Container(
+                                  child: movie.posterPath != null
+                                      ? Image.network(
+                                    'https://image.tmdb.org/t/p/w200${movie.posterPath}',
+                                    fit: BoxFit.cover,
+                                  )
+                                      : const Icon(Icons.image_not_supported),
+                                ),
+                                Positioned(
+                                  top: 0,
+                                  left: 0,
+                                  child: Container(
+                                    width: 22,
+                                    height: 22,
+                                    child: IconButton(
+                                      padding: EdgeInsets.zero,
+                                      icon: Icon(
+                                        watchlist.contains(movie.id)
+                                            ? Icons.bookmark
+                                            : Icons.bookmark_border,
+                                        color: const Color(0xffF7B539),
+                                      ),
+                                      onPressed: () {
+                                        _toggleWatchlist(movie.id!);
+                                      },
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Positioned(
-                                top: 0,
-                                left: 1,
-                                child: Container(
-                                  // color: Colors.greenAccent,
-                                  width: 22,
-                                  height:22,
-                                  child: IconButton(
-                                    padding: EdgeInsets.zero,
-                                    icon: Icon(Icons.add,size: 11,color: Colors.white,),
-                                    onPressed: () {
-                                      // Navigator.pushNamed(context, MovesDetiels.routeName);
-                                    },
-                                  ),
-                                ),
-
-                              ),
-                            ]),
+                              ],
+                            ),
                           );
                         },
                       ),
@@ -269,141 +276,79 @@ class _FirstScreenState extends State<FirstScreen> {
               );
             },
           ),
-          SizedBox(
-            height: 20,
-          ),
+          const SizedBox(height: 20),
           FutureBuilder(
             future: ApiManager.getTop(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasError) {
-                return Center(
-                    child: Text("Something went wrong: ${snapshot.error}"));
+                return Center(child: Text("Something went wrong: ${snapshot.error}"));
               }
               if (!snapshot.hasData || snapshot.data == null) {
-                return Center(child: Text("No movies available"));
+                return const Center(child: Text("No movies available"));
               }
 
               var topRated = snapshot.data?.results ?? [];
               return Container(
-                color: Color(0xff282A28),
+                color: const Color(0xff282A28),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10,top: 10),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 10, top: 10),
                       child: Text(
                         "Top Rated ",
                         style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     Container(
                       color: Colors.transparent,
-                      height: 200,
+                      height: 180,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         itemCount: topRated.length,
                         itemBuilder: (context, index) {
                           var movie = topRated[index];
                           return Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: Stack(children: [
-                              Container(
-                                // width: 127,
-                                height: 135,
-                                child: movie.posterPath != null
-                                    ? Image.network(
-                                  'https://image.tmdb.org/t/p/w200${movie.posterPath}',
-                                  fit: BoxFit.cover,
-                                )
-                                    : Icon(Icons.image_not_supported),
-                              ),
-                              Positioned(
-                                top: 0,
-                                left: 0,
-                                child: Container(
-                                  width: 22,
-                                  height: 22,
-                                  // color: Colors.yellow,
-                                  child: IconButton(
-                                    padding: EdgeInsets.zero,
-                                    icon: Icon(Icons.bookmark,color: Color(0xff514F4F),),
-                                    onPressed: () {
-                                      // Navigator.pushNamed(context, MovesDetiels.routeName);
-                                    },
-                                  ),
+                            padding: const EdgeInsets.all(8),
+                            child: Stack(
+                              children: [
+                                Container(
+                                  child: movie.posterPath != null
+                                      ? Image.network(
+                                    'https://image.tmdb.org/t/p/w200${movie.posterPath}',
+                                    fit: BoxFit.cover,
+                                  )
+                                      : const Icon(Icons.image_not_supported),
                                 ),
-                              ),
-                              Positioned(
-                                top: 0,
-                                left: 1,
-                                child: Container(
-                                  // color: Colors.greenAccent,
-                                  width: 22,
-                                  height:22,
-                                  child: IconButton(
-                                    padding: EdgeInsets.zero,
-                                    icon: Icon(Icons.add,size: 11,color: Colors.white,),
-                                    onPressed: () {
-                                      // Navigator.pushNamed(context, MovesDetiels.routeName);
-                                    },
-                                  ),
-                                ),
-
-                              ),
-
-
-                              Positioned(
-                                top: 135,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.star,
-                                      color: Color(0xffFFBB3B),
-                                      size: 12,
-                                    ),
-                                    SizedBox(width: 5),
-                                    Text(
-                                      movie.voteAverage.toString(),
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                                Positioned(
+                                  top: 0,
+                                  left: 0,
+                                  child: Container(
+                                    width: 22,
+                                    height: 22,
+                                    child: IconButton(
+                                      padding: EdgeInsets.zero,
+                                      icon: Icon(
+                                        watchlist.contains(movie.id)
+                                            ? Icons.bookmark
+                                            : Icons.bookmark_border,
+                                        color: const Color(0xffF7B539),
                                       ),
+                                      onPressed: () {
+                                        _toggleWatchlist(movie.id!);
+                                      },
                                     ),
-                                  ],
-                                ),
-                              ),
-                              Positioned(
-                                top: 150,
-                                child: Text(
-                                  movie.title ?? "No Title",
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
                                   ),
-                                  textAlign: TextAlign.center,
                                 ),
-                              ),
-                              Positioned(
-                                top: 165,
-                                child: Text(
-                                  movie.releaseDate?.substring(0, 10) ?? "No Title",
-                                  style: TextStyle(
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xffB5B4B4),
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ]),
+                              ],
+                            ),
                           );
                         },
                       ),
@@ -413,11 +358,14 @@ class _FirstScreenState extends State<FirstScreen> {
               );
             },
           ),
-
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, Watchlist.routeName);
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
 }
-
-
